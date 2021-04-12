@@ -1,16 +1,25 @@
 const Account = require('./accounts-model');
+const db = require('../../data/db-config');
 
 const checkAccountPayload = (req, res, next) => {
 	const { name, budget } = req.body;
 	if (name && budget) {
 		next();
 	} else {
-		res.status(400).json({ message: 'Name and budget required' });
+		res.status(400).json({ message: 'name and budget are required' });
 	}
 };
 
 const checkAccountNameUnique = (req, res, next) => {
-	// DO YOUR MAGIC
+	const { name } = req.body;
+
+	const data = db('accounts').select('name').exists(name);
+
+	if (data) {
+		res.status(400).json({ message: 'that name is taken' });
+	} else {
+		next();
+	}
 };
 
 const checkAccountId = async (req, res, next) => {
