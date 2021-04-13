@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const Accounts = require('./accounts-model');
+const Account = require('./accounts-model');
 const {
 	checkAccountId,
 	checkAccountPayload,
@@ -8,34 +8,42 @@ const {
 
 router.get('/', async (req, res, next) => {
 	try {
-		const data = await Accounts.getAll();
-		res.json(data);
+		const accounts = await Account.getAll();
+		res.json(accounts);
 	} catch (err) {
 		next(err);
 	}
 });
 
-router.get('/:id', checkAccountId, (req, res, next) => {
+router.get('/:id', checkAccountId, async (req, res) => {
 	res.json(req.account);
 });
 
-router.post('/', checkAccountPayload, async (req, res, next) => {
-	try {
-		const newAccount = await Accounts.create(req.body);
-		res.status(201).json(newAccount);
-	} catch (err) {
-		next(err);
+router.post(
+	'/',
+	checkAccountPayload,
+	checkAccountNameUnique,
+	async (req, res, next) => {
+		try {
+			const newAccount = await Account.create({
+				name: req.body.name.trim(),
+				budget: req.body.budget,
+			});
+			res.status(201).json(newAccount);
+		} catch (err) {
+			next(err);
+		}
 	}
-});
+);
 
 router.put(
 	'/:id',
-	checkAccountPayload,
 	checkAccountId,
+	checkAccountPayload,
 	async (req, res, next) => {
+		const updated = await Account.updateById(req.params.id, req.body);
 		try {
-			const updatedAccount = await Accounts.updateById(req.params.id, req.body);
-			res.json(updatedAccount);
+			res.json(updated);
 		} catch (err) {
 			next(err);
 		}
@@ -44,15 +52,18 @@ router.put(
 
 router.delete('/:id', checkAccountId, async (req, res, next) => {
 	try {
-		const deletedAccount = await Accounts.deleteById(req.params.id);
-		res.json(deletedAccount);
+		await Account.deleteById(req.params.id);
+		res.json(req.account);
 	} catch (err) {
 		next(err);
 	}
 });
 
 router.use((err, req, res, next) => {
-	res.status(500).json({ message: err.message, stack: err.stack });
+	// eslint-disable-line
+	res
+		.status(err.status || 500)
+		.json({ message: err.message, stack: err.stack });
 });
 
 module.exports = router;

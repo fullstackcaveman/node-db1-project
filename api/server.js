@@ -4,9 +4,9 @@ const server = express();
 
 server.use(express.json());
 
-const AccountRouter = require('./accounts/accounts-router');
+const accountsRouter = require('./accounts/accounts-router');
 
-server.use('/api/accounts', AccountRouter);
+server.use('/api/accounts', accountsRouter);
 
 server.get('/', (_req, res) => {
 	res.json('API running...');
